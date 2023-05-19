@@ -1,3 +1,4 @@
+const { response } = require("express");
 const knex = require("../database/knex");
 
 
@@ -100,6 +101,24 @@ class NotesController {
 
 
     return response.json(notesWithTags)
+  }
+
+  async getAllNotes(request, response) {
+    const allNotes = await knex("notes");
+    const tags = await knex("tags");
+    const links = await knex("links")
+    const notesWithTags = allNotes.map(note => {
+      const noteTags = tags.filter(tag => tag.note_id === note.id);
+      const noteLink = links.filter(link => link.note_id === note.id);
+
+      return {
+        ...note,
+        tags: noteTags,
+        link: noteLink
+      };
+    });
+
+    return response.json(notesWithTags);
   }
 
 

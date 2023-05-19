@@ -9,11 +9,12 @@ const notesRoutes = Router();
 
 const notesController = new NotesController ()
 
-notesRoutes.use(ensureAuthenticated)
+// notesRoutes.use(ensureAuthenticated)
 
-notesRoutes.get("/", notesController.index);
-notesRoutes.post("/", notesController.create);
-notesRoutes.get("/:id", notesController.show);
-notesRoutes.delete("/:id", notesController.delete);
+notesRoutes.get("/", ensureAuthenticated, notesController.index);
+notesRoutes.get("/allNotes", notesController.getAllNotes);
+notesRoutes.post("/", ensureAuthenticated, notesController.create);
+notesRoutes.get("/:id", ensureAuthenticated, notesController.show);
+notesRoutes.delete("/:id", ensureAuthenticated, notesController.delete);
 
 module.exports = notesRoutes;
