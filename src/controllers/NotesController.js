@@ -4,13 +4,16 @@ const knex = require("../database/knex");
 
 class NotesController {
   async create(request, response) {
-    const { title, description, tags, links } = request.body;
+    const { title, description, restricao_nota, nota_favorita, nota_compartilhada, tags, links } = request.body;
 
     const user_id  = request.user.id;
 
     const [note_id] = await knex("notes").insert({
       title,
       description,
+      restricao_nota,
+      nota_favorita,
+      nota_compartilhada,
       user_id
     });
 
@@ -104,7 +107,7 @@ class NotesController {
   }
 
   async getAllNotes(request, response) {
-    const allNotes = await knex("notes");
+    const allNotes = await knex("notes").where("restricao_nota", 0);
     const tags = await knex("tags");
     const links = await knex("links")
     const notesWithTags = allNotes.map(note => {
