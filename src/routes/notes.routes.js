@@ -13,7 +13,7 @@ const notesController = new NotesController ()
 
 notesRoutes.get("/", ensureAuthenticated, notesController.index);
 notesRoutes.get("/allNotes", notesController.getAllNotes);
-notesRoutes.post("/", ensureAuthenticated, notesController.create);
+notesRoutes.post("/", notesController.create);
 notesRoutes.get("/:id", ensureAuthenticated, notesController.show);
 notesRoutes.delete("/:id", ensureAuthenticated, notesController.delete);
 
