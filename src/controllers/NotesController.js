@@ -120,6 +120,7 @@ class NotesController {
         link: noteLink
       };
     });
+    
 
     return response.json(notesWithTags);
   }
