@@ -6,6 +6,8 @@ exports.up = knex => knex.schema.createTable("notes", table =>{
     table.binary("nota_favorita"); 
     table.binary("nota_compartilhada"); 
     table.integer("user_id").references("id").inTable("users");
+    table.integer("grupos_id").references("id").inTable("grupos");
+    
     table.timestamp("created_at").default(knex.fn.now());
     table.timestamp("updated_at").default(knex.fn.now());
 
