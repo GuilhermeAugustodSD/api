@@ -9,10 +9,12 @@ const notesRoutes = Router();
 
 const notesController = new NotesController ()
 
-notesRoutes.use(ensureAuthenticated)
+// notesRoutes.use(ensureAuthenticated)
 
 notesRoutes.get("/", notesController.index);
 notesRoutes.get("/get", notesController.getNotes);
+notesRoutes.get("/allNotes", notesController.getAllNotes);
+notesRoutes.get("/noteGrupo/:grupos_id", notesController.getNotesGrupos);
 notesRoutes.get("/getUserNote/:id", notesController.getNotesByUser);
 notesRoutes.get("/:id", notesController.show);
 notesRoutes.post("/", notesController.create);

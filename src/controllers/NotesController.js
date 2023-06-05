@@ -1,3 +1,4 @@
+const { response } = require("express");
 const knex = require("../database/knex");
 const sqliteConnection = require("../database/sqlite");
 const AppError = require("../utils/AppError");
@@ -5,35 +6,54 @@ const AppError = require("../utils/AppError");
 
 class NotesController {
   async create(request, response) {
-    const { title, description, tags, links } = request.body;
+    const { title, description, restricao_nota, nota_favorita, nota_compartilhada, tags, links, grupos_id, checklist } = request.body;
 
     const user_id = request.user.id;
 
     const [note_id] = await knex("notes").insert({
       title,
       description,
-      user_id
+      restricao_nota,
+      nota_favorita,
+      nota_compartilhada,
+      user_id,
+      grupos_id
+
     });
 
-    const linksInsert = links.map(link => {
-      return {
-        note_id,
-        url: link
-      }
-    })
+    if (checklist){
+      const checklistInsert = await checklist.map(name => {
+        return {
+          note_id,
+          title: name
+        }
+      })
+  
+      await knex("checklist").insert(checklistInsert);
+    }
 
-    console.log(linksInsert)
-    await knex("links").insert(linksInsert);
+    if (links){
+      const linksInsert = await links.map(link => {
+        return {
+          note_id,
+          url: link
+        }
+      })
+  
+      await knex("links").insert(linksInsert);
+    }
 
-    const tagsInsert = tags.map(name => {
-      return {
-        note_id,
-        name,
-        user_id
-      }
-    })
-
-    await knex("tags").insert(tagsInsert);
+    if (tags) {
+      const tagsInsert = await tags.map(name => {
+        return {
+          note_id,
+          name,
+          user_id
+        }
+      })
+      
+      await knex("tags").insert(tagsInsert);
+    }
 
     return response.json();
   }
@@ -81,14 +101,16 @@ class NotesController {
     const { id } = request.params;
 
     const note = await knex("notes").where({ id }).first();
-    const tags = await knex("tags").where({ note_id: id }).orderBy("name");
-    const links = await knex("links").where({ note_id: id }).orderBy("created_at");
 
+    const tags = await knex("tags").where({ note_id: id}).orderBy("name");
+    const links = await knex("links").where({ note_id: id}).orderBy("created_at");
+    const checklist = await knex("checklist").where({ note_id: id}).orderBy("created_at");
 
     return response.json({
       ...note,
       tags,
-      links
+      links,
+      checklist
     });
   }
 
@@ -143,6 +165,7 @@ class NotesController {
 
     return response.json(notesWithTags)
   }
+
 
   async edit(request, response) {
 
@@ -199,6 +222,49 @@ class NotesController {
 
     return response.json();
   }
+  async getAllNotes(request, response) {
+
+    const allNotes = await knex("notes").where("restricao_nota", 0);
+    const tags = await knex("tags");
+    const links = await knex("links")
+    const checklist = await knex("checklist")
+    const notesWithTags = allNotes.map(note => {
+      const noteTags = tags.filter(tag => tag.note_id === note.id);
+      const noteLink = links.filter(link => link.note_id === note.id);
+      const noteChecklist = checklist.filter(check => check.note_id === note.id);
+
+      return {
+        ...note,
+        tags: noteTags,
+        link: noteLink,
+        checklist: noteChecklist
+      };
+    });
+    
+
+    return response.json(notesWithTags);
+  }
+
+  async getNotesGrupos(request, response){
+    const { grupos_id } = request.params;
+    console.log(grupos_id);
+    const allNotes = await knex("notes").where("grupos_id", grupos_id);
+    const tags = await knex("tags");
+    const links = await knex("links")
+    const notesWithTags = allNotes.map(note => {
+      const noteTags = tags.filter(tag => tag.note_id === note.id);
+      const noteLink = links.filter(link => link.note_id === note.id);
+
+      return {
+        ...note,
+        tags: noteTags,
+        link: noteLink
+      };
+    });
+
+    return response.json(notesWithTags);
+  }
+
 
 }
 
