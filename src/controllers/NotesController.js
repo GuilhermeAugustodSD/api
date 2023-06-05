@@ -7,6 +7,7 @@ class NotesController {
     const { title, description, restricao_nota, nota_favorita, nota_compartilhada, tags, links, grupos_id, checklist } = request.body;
 
     const user_id  = request.user.id;
+   
 
     const [note_id] = await knex("notes").insert({
       title,
@@ -127,7 +128,6 @@ class NotesController {
 
   async getAllNotes(request, response) {
 
-    
     const allNotes = await knex("notes").where("restricao_nota", 0);
     const tags = await knex("tags");
     const links = await knex("links")

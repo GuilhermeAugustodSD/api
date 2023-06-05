@@ -8,6 +8,10 @@ class AddUsersGroupController {
         const [ user ] = await knex("users").where({email});
 
         if (!email) {
+            throw new AppError("Preencha o campo de email")
+        }
+
+        if (!user) {
             throw new AppError("Este e-mail não existe na base de dados!")
         }
 
