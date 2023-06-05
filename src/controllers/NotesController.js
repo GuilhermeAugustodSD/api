@@ -93,7 +93,7 @@ class NotesController {
     return response.json(
       allNotes
 
-    )
+    );
   }
 
 
