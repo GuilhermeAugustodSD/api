@@ -6,7 +6,9 @@ const createUsers = `
     password VARCHAR,
     avatar VACHAR NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    perfil INTEGER,
+    FOREIGN KEY(perfil) REFERENCES perfis(id)
   )
 `;
 

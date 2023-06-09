@@ -17,7 +17,7 @@ class NotesController {
       nota_favorita,
       nota_compartilhada,
       user_id,
-      grupos_id
+      grupos_id: grupos_id ? grupos_id : null
 
     });
 
