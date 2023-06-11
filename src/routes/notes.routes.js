@@ -14,11 +14,14 @@ notesRoutes.use(ensureAuthenticated);
 notesRoutes.get("/", notesController.index);
 notesRoutes.get("/get", notesController.getNotes);
 notesRoutes.get("/allNotes", notesController.getAllNotes);
+notesRoutes.get("/allNotesFav", notesController.getAllNotesFav);
 notesRoutes.get("/noteGrupo/:grupos_id", notesController.getNotesGrupos);
 notesRoutes.get("/getUserNote/:id", notesController.getNotesByUser);
 notesRoutes.get("/:id", notesController.show);
 notesRoutes.post("/", notesController.create);
-notesRoutes.put("/:userId", notesController.edit);
 notesRoutes.delete("/:id", notesController.delete);
+notesRoutes.put("/:userId", notesController.edit);
+
+notesRoutes.put("/favorite/:note_id", notesController.putFavNotes);
 
 module.exports = notesRoutes;

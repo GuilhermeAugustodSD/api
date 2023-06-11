@@ -166,6 +166,15 @@ class NotesController {
     return response.json(notesWithTags)
   }
 
+  async update(request, response) {
+    const { id, title, description, restricao_nota, nota_compartilhada, nota_favorita } = request.body;
+    const user_id  = request.user.id;
+    const notes = knex("notes").where({user_id});
+    console.log(notes);
+    notes.nota_favorita = nota_compartilhada ?? notes.nota_compartilhada;
+    /* ajustar */
+  }
+
 
   async edit(request, response) {
 
@@ -245,9 +254,48 @@ class NotesController {
     return response.json(notesWithTags);
   }
 
+  async putFavNotes(request, response) {
+    const { note_id } = request.params;
+
+    const notes = await knex("notes").where({ id: note_id }).first();
+
+    if (notes.nota_favorita == 1) {
+      notes.nota_favorita = 0;
+
+    }else {
+      notes.nota_favorita = 1;
+    }
+
+    await knex("notes").update(notes).where({ id: note_id });
+
+    return response.json();
+  }
+
+  async getAllNotesFav(request, response) {
+
+    const allNotes = await knex("notes").where("nota_favorita", "1");
+    const tags = await knex("tags");
+    const links = await knex("links")
+    const checklist = await knex("checklist")
+    const notesWithTags = allNotes.map(note => {
+      const noteTags = tags.filter(tag => tag.note_id === note.id);
+      const noteLink = links.filter(link => link.note_id === note.id);
+      const noteChecklist = checklist.filter(check => check.note_id === note.id);
+
+      return {
+        ...note,
+        tags: noteTags,
+        link: noteLink,
+        checklist: noteChecklist
+      };
+    });
+    
+
+    return response.json(notesWithTags);
+  }
+
   async getNotesGrupos(request, response){
     const { grupos_id } = request.params;
-    console.log(grupos_id);
     const allNotes = await knex("notes").where("grupos_id", grupos_id);
     const tags = await knex("tags");
     const links = await knex("links")
