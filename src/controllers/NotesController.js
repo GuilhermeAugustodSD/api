@@ -58,6 +58,7 @@ class NotesController {
     return response.json();
   }
 
+
   async getNotes(request, response) {
     const notes = await knex('notes')
 
@@ -71,28 +72,24 @@ class NotesController {
       .where('notes.user_id', id)
 
     const links = await knex("links")
-      .select("links.id", 'url', "links.note_id")
-      .innerJoin("tags", "tags.note_id", "links.note_id")
-      .where({ user_id: id })
-
     const tags = await knex("tags").where({ user_id: id }).orderBy("name");
+    const checklist = await knex("checklist")
 
-    console.log(links)
+    //console.log(links)
     const allNotes = notes.map(note => (
       {
-        id: note.id,
-        title: note.title,
-        description: note.description,
-        user_id: note.user_id,
+        ...note,
         url: links.filter(link => link.note_id === note.id),
         tags: tags.filter(tag => tag.note_id === note.id),
-        created_at: note.created_at
+        checklist: checklist.filter(check => check.note_id === note.id),
+
       }
     ))
 
+    console.log(allNotes)
+
     return response.json(
       allNotes
-
     );
   }
 
@@ -102,9 +99,9 @@ class NotesController {
 
     const note = await knex("notes").where({ id }).first();
 
-    const tags = await knex("tags").where({ note_id: id}).orderBy("name");
-    const links = await knex("links").where({ note_id: id}).orderBy("created_at");
-    const checklist = await knex("checklist").where({ note_id: id}).orderBy("created_at");
+    const tags = await knex("tags").where({ note_id: id }).orderBy("name");
+    const links = await knex("links").where({ note_id: id }).orderBy("created_at");
+    const checklist = await knex("checklist").where({ note_id: id }).orderBy("created_at");
 
     return response.json({
       ...note,
@@ -166,6 +163,7 @@ class NotesController {
     return response.json(notesWithTags)
   }
 
+
   async update(request, response) {
     const { id, title, description, restricao_nota, nota_compartilhada, nota_favorita } = request.body;
     const user_id  = request.user.id;
@@ -175,17 +173,11 @@ class NotesController {
     /* ajustar */
   }
 
-
   async edit(request, response) {
 
-    const { noteId, noteTitle, noteDescription, noteTag, noteUrl } = request.body
-    const user_id = Number(request.params.userId);
+    const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck } = request.body
     const database = await sqliteConnection();
-    const user = await database.get("SELECT * FROM users WHERE id = (?)", [user_id]);
 
-    if (!user) {
-      throw new AppError("Usuário não encontrado!");
-    }
 
     const updateNote = await database.get(`
     SELECT *
@@ -199,38 +191,48 @@ class NotesController {
     updateNote.title = noteTitle ?? updateNote.title;
     updateNote.description = noteDescription ?? updateNote.description
 
-    
+
     database.run(`
     UPDATE notes SET
     title = ?,
     description = ?,
     updated_at = DATETIME('now')
     WHERE id = ?`,
-    [updateNote.title, updateNote.description, noteId]
-     
+      [updateNote.title, updateNote.description, noteId]
+
     );
-    
+
     noteTag.map(tag =>
       database.run(
         `
         UPDATE tags SET
         name = ?
         where id = ? `,
-          [tag.name, tag.id]
-        ))
-    
+        [tag.name, tag.id]
+      ))
+
     noteUrl.map(url =>
       database.run(
         `
         UPDATE links SET
         url = ?
         where id = ? `,
-          [url.url, url.id]
-        ))
-    
+        [url.url, url.id]
+      ))
+
+    noteCheck.map(check =>
+      database.run(
+        `
+        UPDATE checklist SET
+        title = ?
+        where id = ? `,
+        [check.title, check.id]
+      ))
+
 
     return response.json();
   }
+
   async getAllNotes(request, response) {
 
     const allNotes = await knex("notes").where("restricao_nota", 0);
@@ -249,10 +251,11 @@ class NotesController {
         checklist: noteChecklist
       };
     });
-    
+
 
     return response.json(notesWithTags);
   }
+
 
   async putFavNotes(request, response) {
     const { note_id } = request.params;
@@ -293,8 +296,9 @@ class NotesController {
 
     return response.json(notesWithTags);
   }
+    
 
-  async getNotesGrupos(request, response){
+  async getNotesGrupos(request, response) {
     const { grupos_id } = request.params;
     const allNotes = await knex("notes").where("grupos_id", grupos_id);
     const tags = await knex("tags");

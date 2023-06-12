@@ -53,7 +53,78 @@ class GruposController {
       return response.json(grupoUser);
     }
 
+    async getAllGroups(require, response) {
 
-}
-
-module.exports = GruposController;
+      const allGroups = await knex('grupos')
+      const userGrupos = await knex("user_grupos")
+      const allNotes = await knex("notes")
+  
+      const allData = allGroups.map(group => {
+        const notes = allNotes.filter(note => note.grupos_id === group.id)
+        const usersId = userGrupos.filter(userGrupo => userGrupo.grupos_id === group.id)
+        return {
+          ...group,
+          users: usersId,
+          notes
+        }
+      })
+  
+      return response.json(allData)
+    }
+  
+    async getGroup(require, response) {
+      const { id } = require.params
+  
+      const [group] = await knex("grupos")
+        .select('name', 'id')
+        .where('id', id)
+  
+      const groupUsers = await knex("user_grupos").where('grupos_id', id)
+      const notes = await knex('notes').where('grupos_id', id)
+      const tags = await knex("tags");
+      const links = await knex("links")
+      const checklist = await knex("checklist")
+      const users = await knex('users')
+      const usersbyGroup = groupUsers.map(groupUser => {
+        const [data] = users.filter(user => user.id === groupUser.user_id)
+        return {
+          ...data
+        }
+      })
+  
+      const completeNote = notes.map(note => {
+        const noteTags = tags.filter(tag => tag.note_id === note.id);
+        const noteLink = links.filter(link => link.note_id === note.id);
+        const noteChecklist = checklist.filter(check => check.note_id === note.id);
+  
+        return {
+          ...note,
+          tags: noteTags,
+          url: noteLink,
+          checklist: noteChecklist
+        };
+      })
+  
+      group['users'] = (usersbyGroup)
+      group['notes'] = (completeNote)
+  
+      return response.json([{
+        ...group
+      }])
+  
+    }
+  
+    async delGroupUser(request, response) {
+      const { id } = request.params;
+  
+      await knex("user_grupos").where('user_id', id)
+  
+      return response.json()
+  
+  
+    }
+  
+  
+  }
+  
+  module.exports = GruposController;
