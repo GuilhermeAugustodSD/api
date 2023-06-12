@@ -328,7 +328,7 @@ class NotesController {
       const noteLink = links.filter(link => link.note_id === noteFav.note_id);
         
       return {
-        ...noteFilter,
+        noteFilter,
         tags: noteTags,
         link: noteLink
       };
