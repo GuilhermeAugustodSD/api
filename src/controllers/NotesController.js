@@ -6,7 +6,7 @@ const AppError = require("../utils/AppError");
 
 class NotesController {
   async create(request, response) {
-    const { title, description, restricao_nota, nota_favorita, nota_compartilhada, tags, links, grupos_id, checklist } = request.body;
+    const { title, description, restricao_nota, nota_favorita = 0, nota_compartilhada, tags, links, grupos_id, checklist } = request.body;
 
     const user_id = request.user.id;
 
@@ -18,6 +18,14 @@ class NotesController {
       nota_compartilhada,
       user_id,
       grupos_id: grupos_id ? grupos_id : null
+
+    });
+    
+
+    await knex("users_notas_favoritas").insert({
+      user_id,
+      note_id,
+      nota_favorita
 
     });
 
@@ -164,14 +172,14 @@ class NotesController {
   }
 
 
-  async update(request, response) {
-    const { id, title, description, restricao_nota, nota_compartilhada, nota_favorita } = request.body;
-    const user_id  = request.user.id;
-    const notes = knex("notes").where({user_id});
-    console.log(notes);
-    notes.nota_favorita = nota_compartilhada ?? notes.nota_compartilhada;
-    /* ajustar */
-  }
+  // async update(request, response) {
+  //   const { id, title, description, restricao_nota, nota_compartilhada, nota_favorita } = request.body;
+  //   const user_id  = request.user.id;
+  //   const notes = knex("notes").where({user_id});
+  //   console.log(notes);
+  //   notes.nota_favorita = nota_compartilhada ?? notes.nota_compartilhada;
+  //   /* ajustar */
+  // }
 
   async edit(request, response) {
 
@@ -273,28 +281,63 @@ class NotesController {
 
     return response.json();
   }
+  
+  async put(request, response) {
+    const { note_id } = request.query;
+    const user_id  = request.user.id;
+    let favorita;
+    
+    const notes = await knex("users_notas_favoritas").where({ note_id, user_id });
+
+    if (notes.length !== 0) {
+      
+      notes.map(note => {
+        // console.log(note);
+
+        if (note.user_id == user_id) {
+          if (note.nota_favorita == 1) {
+            favorita = 0;
+      
+          }else {
+            favorita = 1;
+          }
+    
+        }
+      })
+
+      await knex("users_notas_favoritas").update({nota_favorita: favorita}).where({ user_id, note_id });
+
+    }else {
+      await knex("users_notas_favoritas").insert({
+        user_id: request.user.id,
+        note_id: Number(note_id),
+        nota_favorita: 1
+      });
+    }
+
+    return response.json();
+  }
 
   async getAllNotesFav(request, response) {
-
-    const allNotes = await knex("notes").where("nota_favorita", "1");
+    const user_id = request.user.id;
+    const allNotesFavUser = await knex("users_notas_favoritas").where("nota_favorita", 1).where({user_id});
+    const allNotes = await knex("notes");
     const tags = await knex("tags");
     const links = await knex("links")
-    const checklist = await knex("checklist")
-    const notesWithTags = allNotes.map(note => {
-      const noteTags = tags.filter(tag => tag.note_id === note.id);
-      const noteLink = links.filter(link => link.note_id === note.id);
-      const noteChecklist = checklist.filter(check => check.note_id === note.id);
 
+   const filterNotes = allNotesFavUser.map(noteFav => {
+      const noteFilter = allNotes.filter(notes => notes.id === noteFav.note_id);
+      const noteTags = tags.filter(tag => tag.note_id === noteFav.note_id);
+      const noteLink = links.filter(link => link.note_id === noteFav.note_id);
+        
       return {
-        ...note,
+        noteFilter,
         tags: noteTags,
-        link: noteLink,
-        checklist: noteChecklist
+        link: noteLink
       };
-    });
-    
+    })
 
-    return response.json(notesWithTags);
+    return response.json(filterNotes);
   }
     
 

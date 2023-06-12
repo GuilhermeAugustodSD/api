@@ -21,6 +21,7 @@ notesRoutes.get("/:id", notesController.show);
 notesRoutes.post("/", notesController.create);
 notesRoutes.delete("/:id", notesController.delete);
 notesRoutes.put("/:userId", notesController.edit);
+notesRoutes.post("/favorites", notesController.put);
 
 notesRoutes.put("/favorite/:note_id", notesController.putFavNotes);
 
