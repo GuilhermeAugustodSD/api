@@ -325,7 +325,7 @@ class NotesController {
     const tags = await knex("tags");
     const links = await knex("links")
 
-   const filterNotes = allNotesFavUser.map(noteFav => {
+    const filterNotes = allNotesFavUser.map(noteFav => {
       const noteFilter = allNotes.filter(notes => notes.id === noteFav.note_id);
       const noteTags = tags.filter(tag => tag.note_id === noteFav.note_id);
       const noteLink = links.filter(link => link.note_id === noteFav.note_id);
@@ -336,6 +336,8 @@ class NotesController {
         link: noteLink
       };
     })
+
+    console.log(filterNotes);
 
     return response.json(filterNotes);
   }
