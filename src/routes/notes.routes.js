@@ -14,6 +14,7 @@ notesRoutes.use(ensureAuthenticated);
 notesRoutes.get("/", notesController.index);
 notesRoutes.get("/get", notesController.getNotes);
 notesRoutes.get("/allNotes", notesController.getAllNotes);
+notesRoutes.get("/allNotes/:id", notesController.showAllNotes);
 notesRoutes.get("/allNotesFav", notesController.getAllNotesFav);
 notesRoutes.get("/noteGrupo/:grupos_id", notesController.getNotesGrupos);
 notesRoutes.get("/getUserNote/:id", notesController.getNotesByUser);
