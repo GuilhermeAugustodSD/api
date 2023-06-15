@@ -284,6 +284,29 @@ class NotesController {
     return response.json(notesWithTags);
   }
 
+  async showAllNotes(request, response) {
+    const { id } = request.params;
+
+    const allNotes = await knex("notes").where("restricao_nota", 0).where({id});
+    const tags = await knex("tags");
+    const links = await knex("links")
+    const checklist = await knex("checklist")
+    const notesWithTags = allNotes.map(note => {
+      const noteTags = tags.filter(tag => tag.note_id === note.id);
+      const noteLink = links.filter(link => link.note_id === note.id);
+      const noteChecklist = checklist.filter(check => check.note_id === note.id);
+
+      return {
+        ...note,
+        tags: noteTags,
+        link: noteLink,
+        checklist: noteChecklist
+      };
+    });
+
+    return response.json(notesWithTags);
+  }
+
 
   async putFavNotes(request, response) {
     const { note_id } = request.params;
@@ -356,6 +379,8 @@ class NotesController {
         link: noteLink
       };
     })
+
+    console.log(filterNotes);
 
     return response.json(filterNotes);
   }
