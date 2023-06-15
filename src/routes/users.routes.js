@@ -21,6 +21,7 @@ usersRoutes.post("/", usersController.create);
 usersRoutes.put("/", ensureAuthenticated, usersController.update);
 usersRoutes.put("/:id", usersController.updateAllUsers);
 usersRoutes.patch("/avatar", ensureAuthenticated, upload.single("avatar"), userAvatarController.update);
+usersRoutes.patch("/anyAvatar/:id", upload.single("avatar"), userAvatarController.updateAnyUser);
 usersRoutes.delete("/:id", usersController.deleteUsers);
 
 module.exports = usersRoutes;
