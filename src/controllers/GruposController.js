@@ -44,12 +44,26 @@ class GruposController {
         ...gruposFilter
       };
 
+
     })
 
+    return response.json(grupoUser);
+  }
+
+  async getUsergruposUsers(require,response){
+    const { userId } = require.params;
+    
+    const userGrupos = await knex("user_grupos").where('user_id', Number(userId) );
+    const gruposAll = await knex("grupos");
+    const grupoUser = await userGrupos.map(grupo => {
+      const gruposFilter = gruposAll.filter(gru => gru.id === grupo.grupos_id);
+      
+      return {
+        ...gruposFilter
+      };
 
 
-    // console.log(grupoUser);
-
+    })
     return response.json(grupoUser);
   }
 

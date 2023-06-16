@@ -97,7 +97,7 @@ class NotesController {
 
     const userGrposId = userGrupos.map(grop => grop.grupos_id)
 
-    const groupNotes = notes.filter(note => 
+    const groupNotes = notes.filter(note =>
       userGrposId.includes(note.grupos_id) || note.user_id === Number(id)
     )
 
@@ -203,9 +203,9 @@ class NotesController {
 
   async edit(request, response) {
 
-    const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck } = request.body
+    const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck, noteRestriction, noteTeam } = request.body
     const database = await sqliteConnection();
-
+    console.log(noteTeam)
 
     const updateNote = await database.get(`
     SELECT *
@@ -224,9 +224,11 @@ class NotesController {
     UPDATE notes SET
     title = ?,
     description = ?,
+    restricao_nota = ?,
+    grupos_id = ?,
     updated_at = DATETIME('now')
     WHERE id = ?`,
-      [updateNote.title, updateNote.description, noteId]
+      [updateNote.title, updateNote.description, noteRestriction, noteTeam, noteId]
 
     );
 
@@ -287,7 +289,7 @@ class NotesController {
   async showAllNotes(request, response) {
     const { id } = request.params;
 
-    const allNotes = await knex("notes").where("restricao_nota", 0).where({id});
+    const allNotes = await knex("notes").where("restricao_nota", 0).where({ id });
     const tags = await knex("tags");
     const links = await knex("links")
     const checklist = await knex("checklist")
