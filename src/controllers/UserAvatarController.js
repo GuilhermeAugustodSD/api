@@ -34,7 +34,6 @@ class UserAvatarController {
         const user_id = Number(request.params.id);
         const avatarFileName = request.file.filename;
 
-        console.log('a')
         const diskStorage = new DiskStorage();
 
         const user = await knex("users")

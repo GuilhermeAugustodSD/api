@@ -76,7 +76,6 @@ class GruposController {
     const allData = allGroups.map(group => {
       const notes = allNotes.filter(note => note.grupos_id === group.id)
       const usersId = userGrupos.filter(userGrupo => userGrupo.grupos_id === group.id)
-      console.log(usersId)
       return {
         ...group,
         users: usersId,
@@ -138,13 +137,26 @@ class GruposController {
 
   }
 
-  async delGroupUser(request, response) {
-    const { id } = request.params;
+  async delGroupUser(require, response) {
+    const { id } = require.params;
 
-    await knex("user_grupos").where('user_id', id)
+    await knex("user_grupos").where('user_id', id).delete()
 
     return response.json()
 
+  }
+
+  async delTeam(require, response){
+    const {groupId} = require.params
+    console.log(require.params)
+
+    await knex("notes").where('grupos_id', groupId).delete()
+    await knex("user_grupos").where('grupos_id', groupId).delete()
+    await knex("grupos").where('id', groupId).delete()
+    
+
+    
+    return response.json()
 
   }
 

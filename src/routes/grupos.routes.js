@@ -17,6 +17,7 @@ gruposRoutes.get("/gruposUsers/:userId", gruposController.getUsergruposUsers);
 gruposRoutes.get("/AllGroups", gruposController.getAllGroups);
 gruposRoutes.get("/view/:id", gruposController.getGroup);
 gruposRoutes.delete("/del/:id", gruposController.delGroupUser);
+gruposRoutes.delete("/delTeam/:groupId", gruposController.delTeam);
 
 
 module.exports = gruposRoutes;

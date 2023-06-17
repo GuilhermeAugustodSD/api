@@ -205,7 +205,6 @@ class NotesController {
 
     const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck, noteRestriction, noteTeam } = request.body
     const database = await sqliteConnection();
-    console.log(noteTeam)
 
     const updateNote = await database.get(`
     SELECT *
@@ -382,7 +381,6 @@ class NotesController {
       };
     })
 
-    console.log(filterNotes);
 
     return response.json(filterNotes);
   }
