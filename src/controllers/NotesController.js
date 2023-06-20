@@ -20,7 +20,7 @@ class NotesController {
       grupos_id: grupos_id ? grupos_id : null
 
     });
-    
+
 
     await knex("users_notas_favoritas").insert({
       user_id,
@@ -29,25 +29,25 @@ class NotesController {
 
     });
 
-    if (checklist){
+    if (checklist) {
       const checklistInsert = await checklist.map(name => {
         return {
           note_id,
           title: name
         }
       })
-  
+
       await knex("checklist").insert(checklistInsert);
     }
 
-    if (links){
+    if (links) {
       const linksInsert = await links.map(link => {
         return {
           note_id,
           url: link
         }
       })
-  
+
       await knex("links").insert(linksInsert);
     }
 
@@ -59,7 +59,7 @@ class NotesController {
           user_id
         }
       })
-      
+
       await knex("tags").insert(tagsInsert);
     }
 
@@ -69,22 +69,43 @@ class NotesController {
 
   async getNotes(request, response) {
     const notes = await knex('notes')
+    const userGrupos = await knex("user_grupos")
+    console.log(userGrupos)
+    const notesGrupos = notes.map(note => {
+      const grupos = userGrupos.filter(grupo => grupo.grupos_id === note.grupos_id)
 
-    return response.json(notes)
+      return {
+        ...note,
+        grupos
+      }
+    })
+
+
+
+    return response.json(notesGrupos)
   }
 
   async getNotesByUser(request, response) {
     const { id } = request.params
 
     const notes = await knex("notes")
-      .where('notes.user_id', id)
+
+
+    const userGrupos = await knex("user_grupos")
+      .select("grupos_id")
+      .where('user_id', id)
+
+    const userGrposId = userGrupos.map(grop => grop.grupos_id)
+
+    const groupNotes = notes.filter(note =>
+      userGrposId.includes(note.grupos_id) || note.user_id === Number(id)
+    )
 
     const links = await knex("links")
-    const tags = await knex("tags").where({ user_id: id }).orderBy("name");
+    const tags = await knex("tags")
     const checklist = await knex("checklist")
 
-    //console.log(links)
-    const allNotes = notes.map(note => (
+    const allNotes = groupNotes.map(note => (
       {
         ...note,
         url: links.filter(link => link.note_id === note.id),
@@ -94,7 +115,6 @@ class NotesController {
       }
     ))
 
-    console.log(allNotes)
 
     return response.json(
       allNotes
@@ -183,9 +203,8 @@ class NotesController {
 
   async edit(request, response) {
 
-    const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck } = request.body
+    const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck, noteRestriction, noteTeam } = request.body
     const database = await sqliteConnection();
-
 
     const updateNote = await database.get(`
     SELECT *
@@ -204,9 +223,11 @@ class NotesController {
     UPDATE notes SET
     title = ?,
     description = ?,
+    restricao_nota = ?,
+    grupos_id = ?,
     updated_at = DATETIME('now')
     WHERE id = ?`,
-      [updateNote.title, updateNote.description, noteId]
+      [updateNote.title, updateNote.description, noteRestriction, noteTeam, noteId]
 
     );
 
@@ -267,7 +288,7 @@ class NotesController {
   async showAllNotes(request, response) {
     const { id } = request.params;
 
-    const allNotes = await knex("notes").where("restricao_nota", 0).where({id});
+    const allNotes = await knex("notes").where("restricao_nota", 0).where({ id });
     const tags = await knex("tags");
     const links = await knex("links")
     const checklist = await knex("checklist")
@@ -296,7 +317,7 @@ class NotesController {
     if (notes.nota_favorita == 1) {
       notes.nota_favorita = 0;
 
-    }else {
+    } else {
       notes.nota_favorita = 1;
     }
 
@@ -304,33 +325,33 @@ class NotesController {
 
     return response.json();
   }
-  
+
   async put(request, response) {
     const { note_id } = request.query;
-    const user_id  = request.user.id;
+    const user_id = request.user.id;
     let favorita;
-    
+
     const notes = await knex("users_notas_favoritas").where({ note_id, user_id });
 
     if (notes.length !== 0) {
-      
+
       notes.map(note => {
         // console.log(note);
 
         if (note.user_id == user_id) {
           if (note.nota_favorita == 1) {
             favorita = 0;
-      
-          }else {
+
+          } else {
             favorita = 1;
           }
-    
+
         }
       })
 
-      await knex("users_notas_favoritas").update({nota_favorita: favorita}).where({ user_id, note_id });
+      await knex("users_notas_favoritas").update({ nota_favorita: favorita }).where({ user_id, note_id });
 
-    }else {
+    } else {
       await knex("users_notas_favoritas").insert({
         user_id: request.user.id,
         note_id: Number(note_id),
@@ -343,7 +364,7 @@ class NotesController {
 
   async getAllNotesFav(request, response) {
     const user_id = request.user.id;
-    const allNotesFavUser = await knex("users_notas_favoritas").where("nota_favorita", 1).where({user_id});
+    const allNotesFavUser = await knex("users_notas_favoritas").where("nota_favorita", 1).where({ user_id });
     const allNotes = await knex("notes");
     const tags = await knex("tags");
     const links = await knex("links")
@@ -352,7 +373,7 @@ class NotesController {
       const noteFilter = allNotes.filter(notes => notes.id === noteFav.note_id);
       const noteTags = tags.filter(tag => tag.note_id === noteFav.note_id);
       const noteLink = links.filter(link => link.note_id === noteFav.note_id);
-        
+
       return {
         noteFilter,
         tags: noteTags,
@@ -360,11 +381,10 @@ class NotesController {
       };
     })
 
-    console.log(filterNotes);
 
     return response.json(filterNotes);
   }
-    
+
 
   async getNotesGrupos(request, response) {
     const { grupos_id } = request.params;

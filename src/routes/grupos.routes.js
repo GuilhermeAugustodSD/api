@@ -13,9 +13,11 @@ gruposRoutes.post("/addUser", ensureAuthenticated, addUsersGroupController.updat
 gruposRoutes.post("/", ensureAuthenticated, gruposController.create);
 gruposRoutes.get("/", ensureAuthenticated, gruposController.index);
 gruposRoutes.get("/usergrupos", ensureAuthenticated, gruposController.getGrupoUser);
+gruposRoutes.get("/gruposUsers/:userId", gruposController.getUsergruposUsers);
 gruposRoutes.get("/AllGroups", gruposController.getAllGroups);
 gruposRoutes.get("/view/:id", gruposController.getGroup);
 gruposRoutes.delete("/del/:id", gruposController.delGroupUser);
+gruposRoutes.delete("/delTeam/:groupId", gruposController.delTeam);
 
 
 module.exports = gruposRoutes;

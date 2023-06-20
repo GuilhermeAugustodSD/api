@@ -9,8 +9,17 @@ class UsersController {
   async getUsers(request, response) {
 
     const users = await knex("users")
+    const perfis = await knex("perfis")
+    
+    const usersPerfil = users.map(user => {
+      const perfil = perfis.filter(perfil => perfil.id === user.perfil)
+      return {
+        ...user,
+        perfil
+      }
+    })
 
-    return response.json(users)
+    return response.json(usersPerfil)
   }
 
   async getUsersById(request, response) {
@@ -18,7 +27,7 @@ class UsersController {
 
     const users = await knex("users").where({ id })
 
-
+    
     return response.json(users);
   }
 
@@ -43,9 +52,9 @@ class UsersController {
       name,
       email,
       password,
-      perfil
     } = request.body;
-
+    
+    const perfil = 2
     const database = await sqliteConnection();
     const checkUserExists = await database.get("SELECT * FROM users WHERE email = (?)", [email]);
 
@@ -62,7 +71,6 @@ class UsersController {
   async update(request, response) {
     const { name, email, password, old_password } = request.body;
     const user_id = request.user.id;
-
 
     const database = await sqliteConnection();
     const user = await database.get("SELECT * FROM users WHERE id = (?)", [user_id]);
@@ -108,13 +116,14 @@ class UsersController {
   }
 
   async updateAllUsers(request, response) {
-    const senhaAdmin = '0000'
-    const { name, email, password, perfil } = request.body;
+    const { name, email, password, loggedId, perfil} = request.body;
     const user_id = Number(request.params.id);
 
     const database = await sqliteConnection();
     const user = await database.get("SELECT * FROM users WHERE id = (?)", [user_id]);
-
+    const loggedUser = await database.get("SELECT * FROM users WHERE id = (?)", [loggedId]);
+    
+    const passwordMatched = await compare(password, loggedUser.password);
 
     if (!user) {
       throw new AppError("Usuário não encontrado!");
@@ -134,7 +143,7 @@ class UsersController {
       throw new AppError("É preciso informar senha de administrador");
     }
 
-    if (password !== senhaAdmin) {
+    if (!passwordMatched) {
       throw new AppError("Senha de admin não confere!");
     }
 
