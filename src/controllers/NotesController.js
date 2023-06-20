@@ -203,7 +203,7 @@ class NotesController {
 
   async edit(request, response) {
 
-    const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck, noteRestriction, noteTeam } = request.body
+    const { noteId, noteTitle, noteDescription, noteTag, noteUrl, noteCheck, noteRestriction, noteTeam, noteUserId } = request.body
     const database = await sqliteConnection();
 
     const updateNote = await database.get(`
@@ -231,6 +231,23 @@ class NotesController {
 
     );
 
+    await knex("tags").where('note_id', noteId).delete();
+
+    const tagnovo = noteTag.map(tag => {
+      if (tag.name !== '') {
+        return ({
+          note_id: noteId,
+          user_id: noteUserId,
+          name: tag.name
+        });
+      }
+    })
+
+    if (tagnovo) {
+      const filtrado = tagnovo.filter(no => no)
+      await knex("tags").insert(filtrado);
+    }
+
     noteTag.map(tag =>
       database.run(
         `
@@ -240,24 +257,41 @@ class NotesController {
         [tag.name, tag.id]
       ))
 
-    noteUrl.map(url =>
-      database.run(
-        `
-        UPDATE links SET
-        url = ?
-        where id = ? `,
-        [url.url, url.id]
-      ))
 
-    noteCheck.map(check =>
-      database.run(
-        `
-        UPDATE checklist SET
-        title = ?
-        where id = ? `,
-        [check.title, check.id]
-      ))
 
+    await knex("links").where('note_id', noteId).delete();
+
+    const linknovo = noteUrl.map(url => {
+      if (url.url !== '') {
+        return ({
+          note_id: noteId,
+          url: url.url
+        });
+      }
+    })
+
+    if (linknovo) {
+      const filtrado = linknovo.filter(no => no)
+      await knex("links").insert(filtrado);
+    }
+
+
+
+    await knex("checklist").where('note_id', noteId).delete();
+
+    const checkNovo = noteCheck.map(check => {
+      if (check.check !== '') {
+        return ({
+          note_id: noteId,
+          title: check.title
+        });
+      }
+    })
+
+    if (checkNovo) {
+      const filtrado = checkNovo.filter(no => no)
+      await knex("checklist").insert(filtrado);
+    }
 
     return response.json();
   }
