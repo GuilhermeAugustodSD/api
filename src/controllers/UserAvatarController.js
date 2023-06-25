@@ -13,6 +13,7 @@ class UserAvatarController {
 
         const user = await knex("users")
         .where({ id: user_id }).first();
+        console.log(user);
 
         if (!user) {
             throw AppError("Somente usuários autenticados podem mudar a foto de perfil", 401);
@@ -24,6 +25,7 @@ class UserAvatarController {
 
         const filename = await diskStorage.saveFile(avatarFileName);
         user.avatar = filename;
+        console.log(user.avatar);
 
         await knex("users").update(user).where({ id: user_id });
 
